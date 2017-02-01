@@ -44,38 +44,6 @@ class ProtoFuzzerStructMutator : public ProtoFuzzerTypeMutator {
       const VariableSpecificationMessage &var_spec) override;
 };
 
-// Mutates/random generates VariableSpecificationMessage of TYPE_UNION.
-class ProtoFuzzerUnionMutator : public ProtoFuzzerTypeMutator {
- public:
-  ProtoFuzzerUnionMutator(
-      Random &rand, ProtoFuzzerMutator *mutator,
-      const unordered_map<string, VariableSpecificationMessage>
-          &predefined_types)
-      : ProtoFuzzerTypeMutator(rand, mutator, predefined_types) {}
-
-  VariableSpecificationMessage RandomGen(
-      const VariableSpecificationMessage &var_spec) override;
-
-  VariableSpecificationMessage Mutate(
-      const VariableSpecificationMessage &var_spec) override;
-};
-
-// Mutates/random generates VariableSpecificationMessage of TYPE_ARRAY.
-class ProtoFuzzerArrayMutator : public ProtoFuzzerTypeMutator {
- public:
-  ProtoFuzzerArrayMutator(
-      Random &rand, ProtoFuzzerMutator *mutator,
-      const unordered_map<string, VariableSpecificationMessage>
-          &predefined_types)
-      : ProtoFuzzerTypeMutator(rand, mutator, predefined_types) {}
-
-  VariableSpecificationMessage RandomGen(
-      const VariableSpecificationMessage &var_spec) override;
-
-  VariableSpecificationMessage Mutate(
-      const VariableSpecificationMessage &var_spec) override;
-};
-
 }  // namespace vts
 }  // namespace android
 

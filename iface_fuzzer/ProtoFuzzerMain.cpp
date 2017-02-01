@@ -39,19 +39,44 @@ namespace vts {
 
 static Random random{static_cast<uint64_t>(time(0))};
 static size_t kExecSize;
-static InterfaceSpecificationMessage iface_spec;
+static ComponentSpecificationMessage comp_spec;
 static unique_ptr<FuzzerBase> hal;
 static unique_ptr<ProtoFuzzerMutator> mutator;
+
+static ProtoFuzzerMutatorBias mutator_bias{
+    // Heuristic: values close to 0 are likely to be meaningful scalar input
+    // values.
+    [](Random &rand) {
+      size_t dice_roll = rand(10);
+      if (dice_roll < 3) {
+        // With probability of 30% return an integer in range [0, 10).
+        return rand(10);
+      } else if (dice_roll >= 3 && dice_roll < 6) {
+        // With probability of 30% return an integer in range [0, 100).
+        return rand(100);
+      } else if (dice_roll >= 6 && dice_roll < 9) {
+        // With probability of 30% return an integer in range [0, 100).
+        return rand(1000);
+      }
+      if (rand(10) == 0) {
+        // With probability of 1% return 0xffffffffffffffff.
+        return 0xffffffffffffffff;
+      }
+      // With probability 9% result is uniformly random.
+      return rand.Rand();
+    },
+    // Odds of an enum being treated like a scalar are 1:1000.
+    {1, 1000}};
 
 extern "C" int LLVMFuzzerInitialize(int *argc, char ***argv) {
   ProtoFuzzerParams params{ExtractProtoFuzzerParams(*argc, *argv)};
   kExecSize = params.exec_size_;
 
-  iface_spec = params.comp_specs_.front().interface();
+  comp_spec = params.comp_specs_.front();
   mutator = make_unique<ProtoFuzzerMutator>(
-      random, ExtractPredefinedTypes(params.comp_specs_));
+      random, ExtractPredefinedTypes(params.comp_specs_), mutator_bias);
 
-  hal.reset(InitHalDriver(params.comp_specs_.front()));
+  hal.reset(InitHalDriver(comp_spec));
   return 0;
 }
 
@@ -59,9 +84,9 @@ extern "C" size_t LLVMFuzzerCustomMutator(uint8_t *data, size_t size,
                                           size_t max_size, unsigned int seed) {
   ExecutionSpecificationMessage exec_spec;
   if (!exec_spec.ParseFromArray(data, size)) {
-    exec_spec = mutator->RandomGen(iface_spec, kExecSize);
+    exec_spec = mutator->RandomGen(comp_spec.interface(), kExecSize);
   } else {
-    mutator->Mutate(iface_spec, &exec_spec);
+    mutator->Mutate(comp_spec.interface(), &exec_spec);
   }
   exec_spec.SerializeToArray(data, exec_spec.ByteSize());
   return exec_spec.ByteSize();

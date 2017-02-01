@@ -16,14 +16,6 @@
 
 #include "type_mutators/ProtoFuzzerStructMutator.h"
 
-#include <cstring>
-#include <iostream>
-
-using std::cout;
-using std::endl;
-using std::memcpy;
-using std::string;
-
 namespace android {
 namespace vts {
 
@@ -34,12 +26,10 @@ VariableSpecificationMessage ProtoFuzzerStructMutator::RandomGen(
   result.set_type(TYPE_STRUCT);
 
   const VariableSpecificationMessage &blueprint =
-      predefined_types_.at(var_spec.predefined_type());
-
+      FindPredefinedType(result.name());
   for (const auto &struct_value : blueprint.struct_value()) {
-    (*result.add_struct_value()) = mutator_->RandomGen(struct_value);
+    *result.add_struct_value() = mutator_->RandomGen(struct_value);
   }
-
   return result;
 }
 
@@ -49,46 +39,8 @@ VariableSpecificationMessage ProtoFuzzerStructMutator::Mutate(
 
   size_t size = var_spec.struct_value_size();
   size_t idx = rand_(size);
-  (*result.mutable_struct_value(idx)) =
+  *result.mutable_struct_value(idx) =
       mutator_->Mutate(var_spec.struct_value(idx));
-
-  return result;
-}
-
-VariableSpecificationMessage ProtoFuzzerUnionMutator::RandomGen(
-    const VariableSpecificationMessage &var_spec) {
-  VariableSpecificationMessage result{};
-  result.set_name(var_spec.predefined_type());
-  result.set_type(TYPE_UNION);
-
-  const VariableSpecificationMessage &blueprint =
-      predefined_types_.at(result.name());
-
-  for (const auto &union_value : blueprint.union_value()) {
-    (*result.add_union_value()) = mutator_->RandomGen(union_value);
-  }
-  return result;
-}
-
-VariableSpecificationMessage ProtoFuzzerUnionMutator::Mutate(
-    const VariableSpecificationMessage &var_spec) {
-  VariableSpecificationMessage result{var_spec};
-  size_t size = var_spec.union_value_size();
-  size_t idx = rand_(size);
-  (*result.mutable_union_value(idx)) =
-      mutator_->Mutate(var_spec.union_value(idx));
-  return result;
-}
-
-VariableSpecificationMessage ProtoFuzzerArrayMutator::RandomGen(
-    const VariableSpecificationMessage &var_spec) {
-  VariableSpecificationMessage result{};
-  return result;
-}
-
-VariableSpecificationMessage ProtoFuzzerArrayMutator::Mutate(
-    const VariableSpecificationMessage &var_spec) {
-  VariableSpecificationMessage result{var_spec};
   return result;
 }
 
