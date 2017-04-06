@@ -4,6 +4,7 @@ subdirs = [
     "bar/V1_0",
     "baz/V1_0",
     "expression/V1_0",
+    "extension/light/V2_0",
     "foo/V1_0",
     "inheritance/V1_0",
     "libhwbinder/V1_0",
@@ -13,4 +14,5 @@ subdirs = [
     "versioning/V1_0",
     "versioning/V2_2",
     "versioning/V2_3",
+    "versioning/V2_4",
 ]
